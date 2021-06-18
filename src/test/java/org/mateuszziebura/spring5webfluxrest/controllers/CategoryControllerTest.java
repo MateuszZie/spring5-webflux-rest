@@ -45,6 +45,6 @@ class CategoryControllerTest {
         webTestClient.get()
                 .uri("/api/v1/categories/lol")
                 .exchange()
-                .expectBody();
+                .expectBody(Category.class);
     }
 }
