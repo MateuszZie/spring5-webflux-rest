@@ -6,11 +6,16 @@ import org.mateuszziebura.spring5webfluxrest.Repositories.CategoryRepository;
 import org.mateuszziebura.spring5webfluxrest.domain.Category;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.Flow;
+
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 class CategoryControllerTest {
 
@@ -46,5 +51,20 @@ class CategoryControllerTest {
                 .uri("/api/v1/categories/lol")
                 .exchange()
                 .expectBody(Category.class);
+    }
+
+    @Test
+    void createCategory() {
+        BDDMockito.given(categoryRepository.saveAll(any(Publisher.class))).willReturn(Flux.just(Category.builder().description("lol").build()));
+
+        Mono<Category> category = Mono.just(Category.builder().description("some").build());
+
+        webTestClient.post()
+                .uri("/api/v1/categories")
+                .body(category, Category.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
+
     }
 }
