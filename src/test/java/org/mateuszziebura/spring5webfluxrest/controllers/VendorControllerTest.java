@@ -12,7 +12,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class VendorControllerTest {
 
@@ -30,7 +33,7 @@ class VendorControllerTest {
 
     @Test
     void getVendors() {
-        BDDMockito.given(vendorRepository.findAll()).willReturn(Flux.just(new Vendor(), new Vendor()));
+        given(vendorRepository.findAll()).willReturn(Flux.just(new Vendor(), new Vendor()));
 
         webTestClient.get()
                 .uri("/api/v1/vendors")
@@ -41,7 +44,7 @@ class VendorControllerTest {
 
     @Test
     void getVendor() {
-        BDDMockito.given(vendorRepository.findById("yo")).willReturn(Mono.just(new Vendor()));
+        given(vendorRepository.findById("yo")).willReturn(Mono.just(new Vendor()));
 
         webTestClient.get()
                 .uri("/api/v1/vendors/um")
@@ -51,7 +54,7 @@ class VendorControllerTest {
 
     @Test
     void createVendor() {
-        BDDMockito.given(vendorRepository.saveAll(any(Publisher.class))).willReturn(Flux.just(new Vendor()));
+        given(vendorRepository.saveAll(any(Publisher.class))).willReturn(Flux.just(new Vendor()));
 
         Mono<Vendor> vendorMono = Mono.just(new Vendor());
 
@@ -65,7 +68,7 @@ class VendorControllerTest {
 
     @Test
     void updateVendor() {
-        BDDMockito.given(vendorRepository.save(any(Vendor.class))).willReturn(Mono.just(new Vendor()));
+        given(vendorRepository.save(any(Vendor.class))).willReturn(Mono.just(new Vendor()));
 
         Mono<Vendor> vendorMono = Mono.just(new Vendor());
 
@@ -78,15 +81,40 @@ class VendorControllerTest {
     }
 
 
+    @Test
+    void pathVendor() {
+        given(vendorRepository.findById(anyString())).willReturn(Mono.just(new Vendor()));
+        given(vendorRepository.save(any(Vendor.class))).willReturn(Mono.just(new Vendor()));
 
+        Vendor vendor =new Vendor();
+        vendor.setFirstName("Mateusz");
+        vendor.setLastName("Ziebura");
+        Mono<Vendor> vendorMono = Mono.just(vendor);
 
+        webTestClient.patch()
+                .uri("/api/v1/vendors/um")
+                .body(vendorMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
 
+        verify(vendorRepository).save(any());
+    }
+    @Test
+    void pathVendorFail() {
+        given(vendorRepository.findById(anyString())).willReturn(Mono.just(new Vendor()));
+        given(vendorRepository.save(any(Vendor.class))).willReturn(Mono.just(new Vendor()));
 
+        Vendor vendor =new Vendor();
+        Mono<Vendor> vendorMono = Mono.just(vendor);
 
+        webTestClient.patch()
+                .uri("/api/v1/vendors/um")
+                .body(vendorMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
 
-
-
-
-
-
+        verify(vendorRepository, never()).save(any());
+    }
 }
